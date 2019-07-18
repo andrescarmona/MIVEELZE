@@ -1,8 +1,13 @@
 import sys
+import datetime
 from PySide2.QtWidgets import QApplication, QMainWindow
 #from PySide2 import QtCore, QtUiTools
 #from PySide2.QtWidgets import (QLineEdit, QPushButton, QApplication,
 #    QVBoxLayout, QWidget, QLabel, QHBoxLayout,QSizePolicy,QDial,QLCDNumber)
+
+from PySide2.QtCore import QUrl,QTime
+from PySide2.QtMultimedia import QMediaPlayer, QMediaContent
+
 from ul_mise_en_page import Ui_MainWindow
 
 
@@ -16,14 +21,78 @@ class MainWindow(QMainWindow):
         self.ui.STOP_Button.clicked.connect(self.STOP)
         self.ui.FFW_Button.clicked.connect(self.FFW)
         self.ui.REW_Button.clicked.connect(self.REW)
-        self.ui.dial_volumen.minimum(0)
+        self.ui.next_file_button.clicked.connect(self.nextFile)
+        self.ui.prev_file_button.clicked.connect(self.prevFile)
+        self.ui.dial_volumen.setMinimum(0)
+        self.ui.dial_volumen.setMaximum(100)
+        self.ui.dial_volumen.setValue(3)
+        self.ui.volumen_level.setText(str(self.ui.dial_volumen.value())+'%')
 
+        self.ui.sliderTime.setMinimum(0)
+        self.ui.sliderTime.setMaximum(3600)
+        self.ui.sliderTime.setValue(0)
+        self.ui.timePlayed.setText(str(self.ui.sliderTime.value())+'s')
+
+        self.mediaPlayer = QMediaPlayer()
+        self.mediaPlayer.setVideoOutput(self.ui.wVideo)
+        mediaContent = QMediaContent(QUrl.fromLocalFile('big_buck_bunny.avi'))
+        self.mediaPlayer.setMedia(mediaContent)
+    #Dialog
+        self.ui.dial_volumen.valueChanged.connect(self.changeVolDial)
+        self.mediaPlayer.positionChanged.connect(self.updateTime)
+        self.ui.sliderTime.valueChanged.connect(self.changeTime)
+
+    def changeVolDial(self):
+        print('VOLUMEN CHANGED')
+        self.ui.volumen_level.setText(str(self.ui.dial_volumen.value()) + '%')
+        self.mediaPlayer.setVolume(self.ui.dial_volumen.value())
+
+    def updateTime(self):
+        self.ui.sliderTime.valueChanged.disconnect(self.changeTime)
+        localTime = QTime(0, 0, 0)
+        currentTime = localTime.addMSecs(self.mediaPlayer.position())
+        print(self.mediaPlayer.position()-self.mediaPlayer.duration())
+        timeLeft = localTime.addMSecs(self.mediaPlayer.duration()-self.mediaPlayer.position())
+        #h, res = divmod(t, 3600)
+        #m, s = divmod(res, 60)
+        #time_str = f'{int(h):02}:{int(m):02}:{int(s):02}'
+        self.ui.timePlayed.setText(currentTime.toString("HH:mm:ss"))
+        self.ui.timeTotal.setText('-'+timeLeft.toString("HH:mm:ss"))
+        self.ui.sliderTime.setValue(self.mediaPlayer.position())
+
+        self.ui.sliderTime.valueChanged.connect(self.changeTime)
+
+    def changeTime(self):
+        self.mediaPlayer.positionChanged.disconnect(self.updateTime)
+        print('Time CHANGED')
+        self.mediaPlayer.setPosition(self.ui.sliderTime.value())
+        localTime = QTime(0, 0, 0)
+        currentTime = localTime.addMSecs(self.mediaPlayer.position())
+        self.ui.timePlayed.setText(currentTime.toString("HH:mm:ss"))
+        self.mediaPlayer.positionChanged.connect(self.updateTime)
+
+    def prevFile(self):
+        print('prevFile PRESSED')
+
+    def nextFile(self):
+        print('nextFile PRESSED')
 
     def PLAY(self):
         print('PLAY PRESSED')
+        self.mediaPlayer.setVolume(self.ui.dial_volumen.value())
+        self.mediaPlayer.play()
+        localTime = QTime(0, 0, 0)
+        totalTime = localTime.addMSecs(self.mediaPlayer.duration())
+        self.ui.sliderTime.setMaximum(self.mediaPlayer.duration())
+        self.ui.timeTotal.setText(totalTime.toString("HH:mm:ss"))
+
 
     def PAUSE(self):
         print('PAUSE PRESSED')
+        if self.mediaPlayer.state() == QMediaPlayer.PausedState:
+            self.mediaPlayer.play()
+        else:
+            self.mediaPlayer.pause()
 
     def FFW(self):
         print('FFW PRESSED')
@@ -33,6 +102,13 @@ class MainWindow(QMainWindow):
 
     def STOP(self):
         print('STOP PRESSED')
+        self.mediaPlayer.stop()
+
+    def get_str_time(t):
+        h, res = divmod(t, 3600)
+        m, s = divmod(res, 60)
+        return f'{int(h):02}:{int(m):02}:{int(s):02}'
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
