@@ -121,13 +121,13 @@ class MainWindow(QMainWindow):
         rowItem = self.ui.file_list.currentRow()
         if rowItem == -1:
             return
-
-        self.ui.file_list.setCurrentRow((rowItem - 1))
-        filename = self.ui.file_list.currentItem().text()
-        print('Loading ' + filename)
-        mediaContent = QMediaContent(QUrl.fromLocalFile(filename))
-        self.mediaPlayer.setMedia(mediaContent)
-        self.PLAY()
+        else:
+            self.ui.file_list.setCurrentRow((rowItem - 1))
+            filename = self.ui.file_list.currentItem().text()
+            print('Loading ' + filename)
+            mediaContent = QMediaContent(QUrl.fromLocalFile(filename))
+            self.mediaPlayer.setMedia(mediaContent)
+            self.PLAY()
 
     def NEXT(self):
         print('NEXT PRESSED')
@@ -136,13 +136,13 @@ class MainWindow(QMainWindow):
 
         if rowItem+1 > totalItems:
           return
-
-        self.ui.file_list.setCurrentRow((rowItem+1))
-        filename = self.ui.file_list.currentItem().text()
-        print('Loading '+ filename)
-        mediaContent = QMediaContent(QUrl.fromLocalFile(filename))
-        self.mediaPlayer.setMedia(mediaContent)
-        self.PLAY()
+        else:
+            self.ui.file_list.setCurrentRow((rowItem+1))
+            filename = self.ui.file_list.currentItem().text()
+            print('Loading '+ filename)
+            mediaContent = QMediaContent(QUrl.fromLocalFile(filename))
+            self.mediaPlayer.setMedia(mediaContent)
+            self.PLAY()
 
 
     def STOP(self):
